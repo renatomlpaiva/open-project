@@ -21,6 +21,10 @@ agent.
   controllers/models; API stays in `lib/api/v3` with roar representers; new UI uses
   Hotwire + Primer ViewComponents.
 - **Spec conformance**: every acceptance criterion in `spec.md` is implemented and tested.
+- **Design system** (see `docs/design-system.md`): UI uses tokens (reject hard-coded hex
+  colors), supports both light and `.dark` themes, correct fonts (Inter/Bricolage) and Lucide
+  icons, pill/glass/motion patterns, and the status-badge mapping; contrast holds in both
+  themes. For a non-Tailwind host, check the design-system *intent* is preserved.
 - **Correctness risks**: n+1 queries, missing permission checks, unscoped queries, missing
   i18n, enterprise/BIM edition gating, migration safety, missing nil/edge handling.
 - **Tests**: present, meaningful, and green per `op-tester`'s report.

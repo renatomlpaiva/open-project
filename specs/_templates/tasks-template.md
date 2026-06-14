@@ -30,6 +30,9 @@
 | T7 | [ ] | op-reviewer | Lint + diff review vs spec | — | T5,T6 | E | rubocop/eslint/erb_lint clean; criteria met |
 
 > Group C (T3, T4) runs in parallel; Group D (T5, T6) runs in parallel after C.
+>
+> Frontend tasks (`op-frontend`) must name the design-system tokens/components/theme they
+> touch (see `docs/design-system.md`).
 
 ## Notes / decisions during implementation
 

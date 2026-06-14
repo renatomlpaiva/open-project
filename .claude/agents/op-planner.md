@@ -17,9 +17,11 @@ API). You map an approved spec onto the real architecture. The orchestrator tell
 - **Modules** are Rails engines under `modules/<name>/app/**`.
 - **API v3**: Grape in `lib/api/v3/**` with **roar** HAL representers — reuses the same
   services/contracts as the UI.
-- **Frontend**: new UI = Hotwire (`frontend/src/stimulus`, `frontend/src/turbo`) + Primer
-  ViewComponents (`app/components`) + ERB (`app/views`); legacy SPA = Angular
-  (`frontend/src/app`).
+- **Frontend**: all UI follows the design system in `docs/design-system.md` (tokens, light/
+  dark, Inter/Bricolage fonts, Lucide icons, motion, status badges) — owned by `op-frontend`.
+  For an OpenProject host, implement that intent with Hotwire (`frontend/src/stimulus`,
+  `frontend/src/turbo`) + Primer ViewComponents (`app/components`) + ERB; legacy SPA =
+  Angular (`frontend/src/app`).
 - **Background**: `good_job`. **Migrations**: `db/migrate` (see docs/development/migrations).
 
 ## plan mode

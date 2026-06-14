@@ -24,7 +24,7 @@ Check the layers this feature touches (drives which agents run):
 - [ ] **Business logic** — `app/services` (ServiceResult), `app/contracts`, `app/policies` → `op-backend`
 - [ ] **Module engine** — `modules/<name>/app/**` → `op-backend`
 - [ ] **REST API v3** — `lib/api/v3/**` (Grape + roar representers) → `op-api`
-- [ ] **Hotwire UI** — `app/components` (ViewComponent), `app/views`, `frontend/src/stimulus`, `frontend/src/turbo` → `op-frontend`
+- [ ] **UI / design system** — components + theme tokens per `docs/design-system.md`; for an OpenProject host: `app/components` (ViewComponent), `app/views`, `frontend/src/stimulus`, `frontend/src/turbo` → `op-frontend`
 - [ ] **Legacy Angular** — `frontend/src/app/**` → `op-frontend`
 - [ ] **Permissions / i18n** — `config/initializers/permissions*`, `config/locales` → owning agent
 
@@ -43,10 +43,12 @@ return ServiceResult and that authorization lives in a policy, not the service.>
 <New/changed Grape endpoints in lib/api/v3 and their representers. Reuse the same
 services/contracts as the UI. Note HAL links/embeds.>
 
-## Frontend
+## Frontend & design system
 
-<Stimulus controllers / Turbo frames / ViewComponents (Primer) to add or change.
-Only use Angular if extending existing SPA code. Note i18n keys.>
+<UI components/screens to add or change. They MUST follow `docs/design-system.md`: name the
+tokens used, light/dark behavior, components (buttons/cards/inputs/badges) and motion. Note
+new i18n keys. For an OpenProject host, map this onto Hotwire + Primer ViewComponents; use
+Angular only to extend existing SPA code.>
 
 ## Permissions
 

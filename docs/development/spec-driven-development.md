@@ -125,6 +125,9 @@ edit it, then run the next command.
 ## Conventions the agents follow
 
 - **Architecture & patterns:** *Architecture (Big Picture)* in [`AGENTS.md`](../../AGENTS.md).
+- **Design system:** all UI follows [`docs/design-system.md`](../design-system.md) — tokens,
+  light/dark, Inter/Bricolage fonts, Lucide icons, motion, and status badges. `op-frontend`
+  builds to it and `op-reviewer` checks conformance.
 - **Lint before done:** `bundle exec rubocop` / `bin/dirty-rubocop --uncommitted`,
   `cd frontend && npx eslint src/`, `erb_lint {files}`.
 - **Tests:** `bin/rspec path/to/spec.rb:LINE`, `cd frontend && npm test`.
