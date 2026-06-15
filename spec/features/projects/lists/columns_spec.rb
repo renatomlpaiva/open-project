@@ -120,6 +120,48 @@ RSpec.describe "Projects lists columns", :js, with_settings: { login_required?: 
     end
   end
 
+  # Feature 004 (T6): subtitle is a selectable projects-list column. It is
+  # opt-in (not part of the default selected columns) and, once added, shows the
+  # project's subtitle value in its own column.
+  describe "selecting the subtitle column",
+           with_settings: { enabled_projects_columns: %w[name created_at] } do
+    shared_let(:subtitled_project) do
+      create(:project, name: "Subtitled project", identifier: "subtitled-project",
+                       subtitle: "A short tagline")
+    end
+    shared_let(:plain_subtitle_project) do
+      create(:project, name: "No subtitle project", identifier: "no-subtitle-project")
+    end
+
+    before do
+      login_as(admin)
+      projects_page.visit!
+    end
+
+    it "is opt-in: the Subtitle column is not shown by default (FR-8)" do
+      projects_page.expect_columns("Name")
+      projects_page.expect_no_columns("Subtitle")
+    end
+
+    it "can be added via the configure-view modal and shows the value in its own column" do
+      projects_page.set_columns("Name", "Subtitle")
+
+      projects_page.expect_columns("Name", "Subtitle")
+
+      projects_page.within_row(subtitled_project) do
+        expect(page).to have_css(".name", text: subtitled_project.name)
+        # The dedicated subtitle column cell carries the `subtitle` attribute class.
+        expect(page).to have_css(".subtitle", text: "A short tagline")
+      end
+
+      projects_page.within_row(plain_subtitle_project) do
+        expect(page).to have_css(".name", text: plain_subtitle_project.name)
+        # No subtitle: empty cell, no placeholder text.
+        expect(page).to have_css(".subtitle", text: "")
+      end
+    end
+  end
+
   context "when using the action menu", with_settings: { enabled_projects_columns: %w[created_at name project_status] } do
     before do
       login_as(admin)

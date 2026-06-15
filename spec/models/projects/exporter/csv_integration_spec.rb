@@ -231,4 +231,102 @@ RSpec.describe Projects::Exports::CSV, "integration" do
       expect(parsed.size).to eq(1)
     end
   end
+
+  # Feature 004 (T4): subtitle as a selectable, exportable CSV column.
+  describe "with the subtitle column selected" do
+    let(:query_columns) { %w[name description project_status public subtitle] }
+
+    context "when the project has a subtitle (FR-1, FR-2, FR-3)" do
+      before { project.update_column(:subtitle, "A concise project tagline") }
+
+      it "adds a 'Subtitle' header at the selected position" do
+        expect(header).to eq(%w[Name Description Status Public Subtitle])
+      end
+
+      it "emits the project's subtitle value in its row" do
+        expect(rows.first).to eq(
+          [project.name, project.description, "Off track", "false", "A concise project tagline"]
+        )
+      end
+    end
+
+    context "when the project has no subtitle (FR-4 — empty cell, no placeholder)" do
+      before { project.update_column(:subtitle, nil) }
+
+      it "still renders the 'Subtitle' header" do
+        expect(header).to eq(%w[Name Description Status Public Subtitle])
+      end
+
+      it "renders an empty cell, not 'null' or a placeholder" do
+        # CSV.parse yields nil for a trailing empty field; normalize to "".
+        expect(rows.first[4].to_s).to eq("")
+        expect(rows.first[4].to_s).not_to include("null")
+      end
+    end
+
+    context "with special characters in the subtitle (FR-5 — escaped, file stays parseable)" do
+      # The Project model normalizes subtitles: it collapses CR/LF into spaces
+      # and squishes whitespace. We therefore assert the round-trip against the
+      # value as actually stored (what a real export would contain), while still
+      # exercising commas, double quotes, semicolons and non-ASCII characters
+      # which must be CSV-escaped so the file remains parseable.
+      let(:raw_subtitle) { %(Comma, "quote", semicolon; ümlaut & café — line\nbreak) }
+
+      before { project.update!(subtitle: raw_subtitle) }
+
+      it "preserves the stored value intact and keeps the file parseable" do
+        stored = project.reload.subtitle
+
+        # Sanity: the model has stripped the newline (normalization), and the
+        # remaining special characters survive.
+        expect(stored).to include('"quote"')
+        expect(stored).to include("ümlaut & café")
+        expect(stored).not_to include("\n")
+
+        # The exported, escaped value round-trips through CSV.parse unchanged.
+        expect(rows.first[4]).to eq(stored)
+      end
+
+      it "round-trips a value containing the CSV field separator and quotes" do
+        project.update!(subtitle: %(a,b "c" d))
+
+        expect(rows.first[4]).to eq("a,b \"c\" d")
+        # Re-parsing the produced output succeeds (no corruption).
+        expect { CSV.parse(output.delete_prefix(utf8_bom)) }.not_to raise_error
+      end
+    end
+
+    context "with a 255-character subtitle (FR-9 — no truncation)" do
+      let(:long_subtitle) { "x" * 255 }
+
+      before { project.update!(subtitle: long_subtitle) }
+
+      it "exports the full 255-character value untruncated" do
+        expect(rows.first[4].length).to eq(255)
+        expect(rows.first[4]).to eq(long_subtitle)
+      end
+    end
+  end
+
+  # FR-8: selecting subtitle must not change, remove or reorder any existing
+  # column, and an export WITHOUT subtitle must remain unchanged.
+  describe "FR-8 — existing columns unchanged when subtitle is (not) selected" do
+    before { project.update_column(:subtitle, "Some subtitle") }
+
+    it "leaves an export without subtitle untouched (no subtitle leakage)" do
+      # Default query_columns: name, description, project_status, public.
+      expect(header).to eq(%w[Name Description Status Public])
+      expect(rows.first).to eq([project.name, project.description, "Off track", "false"])
+    end
+
+    context "when subtitle is appended to the existing selection" do
+      let(:query_columns) { %w[name description project_status public subtitle] }
+
+      it "keeps the existing columns and only appends the Subtitle column" do
+        expect(header).to eq(%w[Name Description Status Public Subtitle])
+        expect(rows.first.first(4)).to eq([project.name, project.description, "Off track", "false"])
+        expect(rows.first.last).to eq("Some subtitle")
+      end
+    end
+  end
 end

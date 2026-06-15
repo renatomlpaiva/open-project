@@ -175,6 +175,38 @@ RSpec.describe "project export", :js do
       end
     end
 
+    # Feature 004 (T6/T7): adding the Subtitle column to the list and exporting
+    # CSV includes the subtitle, and only for projects the user can see (FR-6).
+    context "with the subtitle column added (feature 004)" do
+      before do
+        important_project.update_column(:subtitle, "Important tagline")
+        party_project.update_column(:subtitle, "Party tagline")
+        index_page.visit!
+      end
+
+      it "includes the subtitle in the exported CSV" do
+        index_page.set_columns("Name", "Subtitle")
+
+        export!
+
+        expect(subject).to have_text("Important tagline")
+        expect(subject).to have_text("Party tagline")
+      end
+
+      context "for a user who can only see one project (FR-6)" do
+        let(:current_user) { restricted_user }
+
+        it "exports the subtitle only for the visible project, never for the hidden one" do
+          index_page.set_columns("Name", "Subtitle")
+
+          export!
+
+          expect(subject).to have_text("Party tagline")
+          expect(subject).to have_no_text("Important tagline")
+        end
+      end
+    end
+
     context "with a disallowed user" do
       let(:current_user) { disallow_user }
 

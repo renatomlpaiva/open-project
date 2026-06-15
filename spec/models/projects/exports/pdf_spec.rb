@@ -94,6 +94,42 @@ RSpec.describe Projects::Exports::PDF do
     end
   end
 
+  # Feature 004 (T5): subtitle renders generically in the PDF export when
+  # selected as a column (FR-1, FR-2, FR-3, FR-7).
+  context "with the subtitle column selected" do
+    let(:query_columns) { %w[name subtitle] }
+
+    context "when the project has a subtitle" do
+      before { project.update_column(:subtitle, "A concise project tagline") }
+
+      it "renders the localized caption and value as readable text" do
+        expected_document = [
+          *expected_cover_page,
+          project.name,
+          "Subtitle", "A concise project tagline",
+          "1/1", export_time_formatted, query.name
+        ].join(" ")
+
+        expect(subject).to eq expected_document
+      end
+    end
+
+    context "when the project has no subtitle (FR-4 — no error, no value)" do
+      before { project.update_column(:subtitle, nil) }
+
+      it "exports successfully without rendering a subtitle value" do
+        expected_document = [
+          *expected_cover_page,
+          project.name,
+          "1/1", export_time_formatted, query.name
+        ].join(" ")
+
+        expect { subject }.not_to raise_error
+        expect(subject).to eq expected_document
+      end
+    end
+  end
+
   describe "custom field columns selected" do
     let(:query_columns) do
       %w[id name] + global_project_custom_fields.sort_by(&:name).map(&:column_name)
