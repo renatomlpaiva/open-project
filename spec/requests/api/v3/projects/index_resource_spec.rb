@@ -325,6 +325,52 @@ RSpec.describe "API v3 Project resource index", content_type: :json do
     end
   end
 
+  context "when filtering by subtitle" do
+    # Visible (member) project whose subtitle contains the value.
+    let(:visible_match) do
+      create(:project, subtitle: "Alpha logistics", members: { current_user => role })
+    end
+    # Visible (member) project whose subtitle does NOT contain the value.
+    let(:visible_no_match) do
+      create(:project, subtitle: "Beta warehouse", members: { current_user => role })
+    end
+    # Matching subtitle, but the current_user is not a member and it is not public:
+    # must be excluded by visibility (FR-7 / AC5 / scenario 6).
+    let(:hidden_match) do
+      create(:project, subtitle: "Alpha hidden", public: false)
+    end
+    let(:projects) { [visible_match, visible_no_match, hidden_match] }
+
+    context 'with the "contains" (~) operator returning only matching, visible projects' do
+      let(:filters) do
+        [{ subtitle: { operator: "~", values: ["alpha"] } }]
+      end
+
+      it_behaves_like "API V3 collection response", 1, 1, "Project" do
+        # Only the visible matching project; non-matching and hidden ones excluded.
+        let(:elements) { [visible_match] }
+      end
+    end
+
+    context "with a mixed-case value (matching is case-insensitive, FR-3)" do
+      let(:filters) do
+        [{ subtitle: { operator: "~", values: ["ALPHA"] } }]
+      end
+
+      it_behaves_like "API V3 collection response", 1, 1, "Project" do
+        let(:elements) { [visible_match] }
+      end
+    end
+
+    context "when no visible project matches (FR-8 / AC6 / scenario 4)" do
+      let(:filters) do
+        [{ subtitle: { operator: "~", values: ["nonexistent subtitle value"] } }]
+      end
+
+      it_behaves_like "API V3 collection response", 0, 0, "Project"
+    end
+  end
+
   context "with the project being archived/inactive" do
     let(:project_active) { false }
     let(:projects) { [project] }

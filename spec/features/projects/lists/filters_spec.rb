@@ -125,6 +125,50 @@ RSpec.describe "Projects list filters", :js, with_settings: { login_required?: f
     projects_page.expect_projects_not_listed(development_project, public_project)
   end
 
+  describe "Subtitle filter" do
+    # Distinct subtitles so we can assert contains/case-insensitive matching.
+    shared_let(:logistics_project) do
+      create(:project, name: "Logi project", identifier: "logi-project", subtitle: "Logistics Hub")
+    end
+    shared_let(:other_subtitle_project) do
+      create(:project, name: "Whse project", identifier: "whse-project", subtitle: "Warehouse")
+    end
+
+    # Sets the (advanced) string subtitle filter: select it from the dropdown,
+    # choose the operator and fill the free-text value, then wait for the
+    # debounced auto-submit to reload the list.
+    def set_subtitle_filter(value, human_operator: "contains")
+      page.select "Subtitle", from: "add_filter_select"
+      filter = page.find(".advanced-filters--filter[data-filter-name='subtitle']")
+      within(filter) do
+        page.select human_operator, from: "operator_subtitle"
+        page.fill_in "subtitle_value", with: value
+      end
+      wait_for_reload
+    end
+
+    it "is offered in the filter dropdown and narrows the list case-insensitively" do
+      load_and_open_filters admin
+
+      # FR-4 / scenario 3: the "Subtitle" filter is available in the dropdown.
+      # This guards the frontend allowlist (ProjectsFiltersComponent#allowed_filter?).
+      expect(page).to have_select("add_filter_select", with_options: ["Subtitle"])
+
+      # AC1 / FR-2 / FR-3 / scenario 5: a mixed-case "contains" value matches
+      # case-insensitively and narrows the list to matching projects only.
+      set_subtitle_filter("logistics")
+
+      projects_page.expect_projects_listed(logistics_project)
+      projects_page.expect_projects_not_listed(other_subtitle_project,
+                                               project,
+                                               development_project,
+                                               public_project)
+
+      # The filter form stays set with the entered value.
+      expect(page).to have_field("subtitle_value", with: "logistics")
+    end
+  end
+
   describe "Active or archived" do
     shared_let(:parent_project) do
       create(:project,
