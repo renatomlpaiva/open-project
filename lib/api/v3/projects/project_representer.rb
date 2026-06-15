@@ -184,6 +184,9 @@ module API
         property :name,
                  render_nil: true
 
+        property :subtitle,
+                 render_nil: true
+
         property :active
         property :public
 

@@ -138,6 +138,28 @@ RSpec.describe(
       copied_work_package
     end
 
+    describe "#subtitle" do
+      before do
+        source.update!(subtitle: "Source subtitle")
+      end
+
+      it "copies the subtitle to the new project" do
+        expect(subject).to be_success
+        expect(project_copy.subtitle).to eq("Source subtitle")
+      end
+
+      context "when the source has no subtitle" do
+        before do
+          source.update!(subtitle: nil)
+        end
+
+        it "leaves the copy without a subtitle" do
+          expect(subject).to be_success
+          expect(project_copy.subtitle).to be_nil
+        end
+      end
+    end
+
     shared_examples_for "copies public attribute" do
       describe "#public" do
         before do

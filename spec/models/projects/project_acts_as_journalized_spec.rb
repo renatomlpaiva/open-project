@@ -115,6 +115,42 @@ RSpec.describe Project, "acts_as_journalized" do
     end
   end
 
+  describe "subtitle journaling", with_settings: { journal_aggregation_time_minutes: 0 } do
+    let!(:project) do
+      User.execute_as user do
+        create(:project, subtitle: "Initial subtitle")
+      end
+    end
+
+    it "notes the subtitle on creation" do
+      expect(project.last_journal.details[:subtitle])
+        .to eql([nil, "Initial subtitle"])
+    end
+
+    context "when the subtitle is changed" do
+      before do
+        project.update!(subtitle: "Changed subtitle")
+      end
+
+      it "records the old → new change as plain text" do
+        expect(project.last_journal.details).to have_key("subtitle")
+        expect(project.last_journal.details[:subtitle])
+          .to eql(["Initial subtitle", "Changed subtitle"])
+      end
+    end
+
+    context "when the subtitle is cleared" do
+      before do
+        project.update!(subtitle: "")
+      end
+
+      it "records the change to nil" do
+        expect(project.last_journal.details[:subtitle])
+          .to eql(["Initial subtitle", nil])
+      end
+    end
+  end
+
   describe "custom values", with_settings: { journal_aggregation_time_minutes: 0 } do
     shared_let(:custom_field) { create(:string_project_custom_field) }
     let(:custom_value) do

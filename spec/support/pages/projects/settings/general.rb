@@ -84,6 +84,27 @@ module Pages
             ProjectEditField.new(page, :parent, selector: "opce-project-autocompleter")
           end
         end
+
+        def subtitle_label
+          I18n.t("activerecord.attributes.project.subtitle")
+        end
+
+        def set_subtitle(value)
+          within_section "Basic details" do
+            field = page.find_field(subtitle_label)
+            field.set("")
+            field.set(value)
+            click_button I18n.t("projects.settings.button_update_details")
+          end
+        end
+
+        def expect_subtitle(value)
+          if value.blank?
+            expect(page).to have_field(subtitle_label, with: "")
+          else
+            expect(page).to have_field(subtitle_label, with: value)
+          end
+        end
       end
     end
   end

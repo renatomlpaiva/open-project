@@ -461,4 +461,46 @@ RSpec.describe Projects::UpdateContract do
       end
     end
   end
+
+  describe "subtitle writability" do
+    let(:project) { build_stubbed(:project) }
+    let(:current_user) { build_stubbed(:user) }
+
+    subject(:contract) { described_class.new(project, current_user, options: {}) }
+
+    before do
+      mock_permissions_for(current_user) do |mock|
+        mock.allow_in_project(*project_permissions, project:)
+      end
+    end
+
+    context "with edit_project permission" do
+      let(:project_permissions) { %i[edit_project] }
+
+      it "lists subtitle as a writable attribute" do
+        expect(contract.writable_attributes).to include("subtitle")
+      end
+
+      it "is valid when only the subtitle changed" do
+        project.subtitle = "A new subtitle"
+
+        expect(contract).to be_valid
+      end
+    end
+
+    context "without edit_project permission" do
+      let(:project_permissions) { [] }
+
+      it "does not list subtitle as a writable attribute" do
+        expect(contract.writable_attributes).not_to include("subtitle")
+      end
+
+      it "is invalid (unauthorized) when changing the subtitle" do
+        project.subtitle = "A new subtitle"
+
+        contract.validate
+        expect(contract.errors.symbols_for(:base)).to include(:error_unauthorized)
+      end
+    end
+  end
 end

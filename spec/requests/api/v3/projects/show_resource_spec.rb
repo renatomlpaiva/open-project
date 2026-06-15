@@ -119,6 +119,34 @@ RSpec.describe "API v3 Project resource show", content_type: :json do
         .not_to have_json_path("customField#{invisible_custom_field.id}/raw")
     end
 
+    describe "subtitle" do
+      context "when the project has a subtitle" do
+        let(:project) do
+          create(:project,
+                 :with_status,
+                 public: false,
+                 active: project_active,
+                 subtitle: "A short tagline")
+        end
+
+        it "exposes the subtitle as a plain string" do
+          expect(subject.body)
+            .to be_json_eql("A short tagline".to_json)
+                  .at_path("subtitle")
+        end
+      end
+
+      context "when the project has no subtitle" do
+        it "renders the subtitle as null" do
+          expect(subject.body)
+            .to have_json_path("subtitle")
+          expect(subject.body)
+            .to be_json_eql(nil.to_json)
+                  .at_path("subtitle")
+        end
+      end
+    end
+
     describe "permissions" do
       context "with admin permissions" do
         current_user { admin }

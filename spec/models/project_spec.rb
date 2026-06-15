@@ -202,6 +202,93 @@ RSpec.describe Project do
     end
   end
 
+  describe "subtitle" do
+    subject { build(:project, subtitle:) }
+
+    let(:subtitle) { "A short tagline" }
+
+    context "when blank/absent (optional)" do
+      let(:subtitle) { nil }
+
+      it "is valid" do
+        expect(subject).to be_valid
+      end
+    end
+
+    context "with a value up to 255 characters" do
+      let(:subtitle) { "a" * 255 }
+
+      it "is valid" do
+        expect(subject).to be_valid
+      end
+    end
+
+    context "with a value of 256 characters" do
+      let(:subtitle) { "a" * 256 }
+
+      it "is invalid with a too_long error" do
+        expect(subject).not_to be_valid
+        expect(subject.errors[:subtitle]).to be_present
+        expect(subject.errors.details[:subtitle].pluck(:error)).to include(:too_long)
+      end
+    end
+
+    context "with 255 multibyte characters (counted as characters, not bytes)" do
+      # Each multibyte glyph counts as one character; 255 of them must pass.
+      let(:subtitle) { "あ" * 255 }
+
+      it "is valid" do
+        expect(subject).to be_valid
+      end
+    end
+
+    context "with 256 multibyte characters" do
+      let(:subtitle) { "あ" * 256 }
+
+      it "is invalid" do
+        expect(subject).not_to be_valid
+        expect(subject.errors.details[:subtitle].pluck(:error)).to include(:too_long)
+      end
+    end
+
+    describe "normalization" do
+      it "trims leading/trailing whitespace and collapses inner whitespace" do
+        expect(build(:project)).to normalize(:subtitle)
+          .from("   Hello    World   ").to("Hello World")
+      end
+
+      it "strips embedded line breaks to keep it single-line" do
+        expect(build(:project)).to normalize(:subtitle)
+          .from("Hello\nWorld\r\nAgain").to("Hello World Again")
+      end
+
+      it "maps whitespace-only input to nil (cleared)" do
+        expect(build(:project)).to normalize(:subtitle).from("   \n\t  ").to(nil)
+      end
+
+      it "maps an empty string to nil (cleared)" do
+        expect(build(:project)).to normalize(:subtitle).from("").to(nil)
+      end
+
+      it "leaves nil as nil" do
+        expect(build(:project)).to normalize(:subtitle).from(nil).to(nil)
+      end
+    end
+
+    describe "persistence" do
+      it "persists set, edit, and clear operations" do
+        project = create(:project, subtitle: "Initial subtitle")
+        expect(project.reload.subtitle).to eq("Initial subtitle")
+
+        project.update!(subtitle: "Edited subtitle")
+        expect(project.reload.subtitle).to eq("Edited subtitle")
+
+        project.update!(subtitle: "")
+        expect(project.reload.subtitle).to be_nil
+      end
+    end
+  end
+
   describe "workspace_type" do
     it "is set to nil by default, to force having errors when it has not been set" do
       # Would it make sense to have "project" as default value?

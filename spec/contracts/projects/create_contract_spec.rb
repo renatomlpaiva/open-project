@@ -396,4 +396,43 @@ RSpec.describe Projects::CreateContract do
       end
     end
   end
+
+  describe "subtitle writability" do
+    let(:current_user) { build_stubbed(:user) }
+    let(:project) do
+      Project.new(name: "Project name",
+                  identifier: "project_identifier",
+                  workspace_type: "project",
+                  subtitle: "A subtitle")
+    end
+
+    subject(:contract) { described_class.new(project, current_user) }
+
+    before do
+      mock_permissions_for(current_user) do |mock|
+        mock.allow_globally(*global_permissions)
+      end
+    end
+
+    context "with add_project permission" do
+      let(:global_permissions) { %i[add_project] }
+
+      it "lists subtitle as a writable attribute" do
+        expect(contract.writable_attributes).to include("subtitle")
+      end
+
+      it "is valid with the subtitle set" do
+        expect(contract).to be_valid
+      end
+    end
+
+    context "without add_project permission" do
+      let(:global_permissions) { [] }
+
+      it "is invalid (unauthorized)" do
+        contract.validate
+        expect(contract.errors.symbols_for(:base)).to include(:error_unauthorized)
+      end
+    end
+  end
 end

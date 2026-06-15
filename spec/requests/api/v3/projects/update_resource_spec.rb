@@ -49,5 +49,99 @@ RSpec.describe "API v3 Project resource update", content_type: :json do
         let(:workspace_api_type) { "Portfolio" }
       end
     end
+
+    describe "subtitle" do
+      include Rack::Test::Methods
+      include API::V3::Utilities::PathHelper
+
+      shared_let(:project) { create(:project, subtitle: "Old subtitle") }
+
+      let(:permissions) { %i[edit_project] }
+      let(:path) { api_v3_paths.project(project.id) }
+
+      current_user do
+        create(:user, member_with_permissions: { project => permissions })
+      end
+
+      before do
+        patch path, body.to_json
+      end
+
+      context "when an authorized user sets the subtitle" do
+        let(:body) { { subtitle: "New subtitle" } }
+
+        it "responds with 200 OK" do
+          expect(last_response).to have_http_status(:ok)
+        end
+
+        it "persists the new subtitle" do
+          expect(project.reload.subtitle).to eq("New subtitle")
+        end
+
+        it "returns the subtitle as a plain string" do
+          expect(last_response.body)
+            .to be_json_eql("New subtitle".to_json)
+                  .at_path("subtitle")
+        end
+      end
+
+      context "when an authorized user clears the subtitle" do
+        let(:body) { { subtitle: "" } }
+
+        it "responds with 200 OK" do
+          expect(last_response).to have_http_status(:ok)
+        end
+
+        it "clears the stored subtitle (nil)" do
+          expect(project.reload.subtitle).to be_nil
+        end
+      end
+
+      context "when the subtitle exceeds 255 characters" do
+        let(:body) { { subtitle: "a" * 256 } }
+
+        it "responds with 422 unprocessable entity" do
+          expect(last_response).to have_http_status(:unprocessable_entity)
+        end
+
+        it "denotes the (translated) length error" do
+          expect(last_response.body)
+            .to be_json_eql("Error".to_json)
+                  .at_path("_type")
+          expect(last_response.body)
+            .to be_json_eql("Subtitle is too long (maximum is 255 characters).".to_json)
+                  .at_path("message")
+        end
+
+        it "does not change the stored subtitle" do
+          expect(project.reload.subtitle).to eq("Old subtitle")
+        end
+      end
+
+      context "when exactly 255 characters" do
+        let(:body) { { subtitle: "a" * 255 } }
+
+        it "responds with 200 OK" do
+          expect(last_response).to have_http_status(:ok)
+        end
+
+        it "persists the value" do
+          expect(project.reload.subtitle).to eq("a" * 255)
+        end
+      end
+
+      context "when the user lacks edit_project permission" do
+        let(:permissions) { %i[view_project_attributes] }
+        let(:body) { { subtitle: "Sneaky subtitle" } }
+
+        it "responds with 403 forbidden" do
+          expect(last_response).to have_http_status(:forbidden)
+        end
+
+        it "does not change the stored subtitle" do
+          expect(project.reload.subtitle).to eq("Old subtitle")
+        end
+      end
+    end
   end
 end

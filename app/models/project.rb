@@ -146,7 +146,7 @@ class Project < ApplicationRecord
   register_journal_formatted_fields "active", formatter_key: :active_status
   register_journal_formatted_fields "cause", formatter_key: :cause
   register_journal_formatted_fields "templated", formatter_key: :template
-  register_journal_formatted_fields "identifier", "name", formatter_key: :plaintext
+  register_journal_formatted_fields "identifier", "name", "subtitle", formatter_key: :plaintext
   register_journal_formatted_fields "status_explanation", "description", formatter_key: :diff
   register_journal_formatted_fields "status_code", formatter_key: :project_status_code
   register_journal_formatted_fields "public", formatter_key: :visibility
@@ -162,7 +162,10 @@ class Project < ApplicationRecord
             presence: true,
             length: { maximum: 255 }
 
+  validates :subtitle, length: { maximum: 255 }
+
   normalizes :name, with: ->(name) { name.squish }
+  normalizes :subtitle, with: ->(subtitle) { subtitle&.gsub(/[\r\n]+/, " ")&.squish.presence }
 
   # TODO: we temporarily disable this validation because it leads to failed tests
   # it implicitly assumes a db:seed-created standard type to be present and currently

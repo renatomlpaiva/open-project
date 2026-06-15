@@ -966,6 +966,7 @@ en:
       header_identifier: Identifier
       header_status: Status
       header_relations: Project relations
+      subtitle_caption: "A short, single-line summary shown alongside the project name."
       button_update_details: Update details
       button_update_status_description: Update status description
       button_update_parent_project: Update parent project
@@ -1930,6 +1931,7 @@ en:
         queries: "Queries"
         status_code: "Status"
         status_explanation: "Status description"
+        subtitle: "Subtitle"
         status_codes:
           not_started: "Not started"
           on_track: "On track"

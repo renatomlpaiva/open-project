@@ -38,6 +38,7 @@ See COPYRIGHT and LICENSE files for more details.
       render(
         Primer::Forms::FormList.new(
           Projects::Settings::NameForm.new(f),
+          Projects::Settings::SubtitleForm.new(f),
           Projects::Settings::DescriptionForm.new(f),
           Projects::Settings::Submit.new(f, label: I18n.t("projects.settings.button_update_details"))
         )

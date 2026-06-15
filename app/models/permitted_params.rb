@@ -303,6 +303,7 @@ class PermittedParams
 
   def project
     whitelist = params.require(:project).permit(:name,
+                                                :subtitle,
                                                 :description,
                                                 :public,
                                                 :responsible_id,

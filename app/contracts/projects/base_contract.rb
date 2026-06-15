@@ -34,6 +34,7 @@ module Projects
     include AssignableCustomFieldValues
 
     attribute :name
+    attribute :subtitle
     attribute :identifier
     attribute :description
     attribute :public

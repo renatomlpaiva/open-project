@@ -45,6 +45,11 @@ module API
                  min_length: 1,
                  max_length: 255
 
+          schema :subtitle,
+                 type: "String",
+                 required: false,
+                 max_length: 255
+
           schema :identifier,
                  type: "String",
                  required: true,

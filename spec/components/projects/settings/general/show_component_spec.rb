@@ -65,6 +65,29 @@ RSpec.describe Projects::Settings::General::ShowComponent, type: :component do
       expect(render_component).to have_element "opce-ckeditor-augmented-textarea",
                                                "data-test-selector": "augmented-text-area-description"
     end
+
+    describe "subtitle field" do
+      let(:subtitle_label) { I18n.t("activerecord.attributes.project.subtitle") }
+
+      it "renders a single-line plain-text input with a translated label" do
+        render_component
+
+        # Translated label (no hard-coded string)
+        expect(page).to have_field subtitle_label
+
+        # Single-line text input — not a rich-text editor and not a textarea
+        field = page.find_field(subtitle_label)
+        expect(field.tag_name).to eq("input")
+        expect(field[:type]).to eq("text")
+      end
+
+      it "does not render the subtitle as a rich-text editor" do
+        render_component
+
+        expect(page).to have_no_element "opce-ckeditor-augmented-textarea",
+                                        "data-test-selector": "augmented-text-area-subtitle"
+      end
+    end
   end
 
   describe "Status" do
