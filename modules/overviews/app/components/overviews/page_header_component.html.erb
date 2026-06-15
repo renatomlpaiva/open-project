@@ -1,6 +1,15 @@
 <%=
   render(Primer::OpenProject::PageHeader.new) do |header|
     header.with_title(variant: :medium) { page_title }
+
+    if project.subtitle.present?
+      header.with_description(font_size: :small, color: :muted) do
+        render(Primer::Beta::Truncate.new) do |truncate|
+          truncate.with_item(title: project.subtitle) { project.subtitle }
+        end
+      end
+    end
+
     header.with_breadcrumbs(breadcrumb_items)
 
     header.with_action_icon_button(

@@ -60,6 +60,75 @@ RSpec.describe Projects::RowComponent, type: :component do
     end
   end
 
+  describe "Subtitle" do
+    context "when the project has a subtitle" do
+      let(:project) do
+        build_stubbed(:project, name: "My Project No. 1", identifier: "myproject_no_1",
+                                subtitle: "A short tagline")
+      end
+
+      it "renders the subtitle as secondary text beneath the name" do
+        expect(rendered_component).to have_css(
+          ".projects-table--name .projects-table--name-subtitle",
+          text: "A short tagline"
+        )
+      end
+
+      it "renders the subtitle with a title attribute for the tooltip" do
+        expect(rendered_component).to have_css(
+          ".projects-table--name-subtitle[title='A short tagline']",
+          text: "A short tagline"
+        )
+      end
+    end
+
+    context "when the project has no subtitle (nil)" do
+      let(:project) do
+        build_stubbed(:project, name: "My Project No. 1", identifier: "myproject_no_1",
+                                subtitle: nil)
+      end
+
+      it "renders no subtitle element, label, or placeholder" do
+        expect(rendered_component).to have_no_css(".projects-table--name-subtitle")
+      end
+    end
+
+    context "when the project subtitle is blank" do
+      let(:project) do
+        project = build_stubbed(:project, name: "My Project No. 1", identifier: "myproject_no_1")
+        # Bypass model normalization to assert the component itself guards on blank.
+        allow(project).to receive(:subtitle).and_return("")
+        project
+      end
+
+      it "renders no subtitle element, label, or placeholder" do
+        expect(rendered_component).to have_no_css(".projects-table--name-subtitle")
+      end
+    end
+
+    context "when the subtitle contains HTML-like characters" do
+      let(:project) do
+        build_stubbed(:project, name: "My Project No. 1", identifier: "myproject_no_1",
+                                subtitle: '<b>bold</b> & "quoted"')
+      end
+
+      it "renders the markup as literal escaped text, not interpreted as HTML" do
+        expect(rendered_component).to have_css(
+          ".projects-table--name-subtitle",
+          text: '<b>bold</b> & "quoted"'
+        )
+        # The literal <b> must NOT become a real bold element.
+        expect(rendered_component).to have_no_css(".projects-table--name-subtitle b")
+      end
+
+      it "escapes the value in the title attribute too" do
+        expect(rendered_component).to have_css(
+          %(.projects-table--name-subtitle[title='<b>bold</b> & "quoted"'])
+        )
+      end
+    end
+  end
+
   describe "Menu" do
     context "when the user has no project edit permissions" do
       it "renders a Primer ActionMenu (single variant)" do

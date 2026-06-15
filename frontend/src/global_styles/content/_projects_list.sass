@@ -77,6 +77,7 @@ $content-padding: 10px
   td.name
     > .projects-table--name
         display: flex
+        flex-wrap: wrap
         gap: var(--base-size-8, 8px)
 
         > .projects-table--name-text
@@ -85,6 +86,13 @@ $content-padding: 10px
 
         > .projects-table--name-description
             @extend %autocomplete-description
+
+        > .projects-table--name-subtitle
+            @extend %autocomplete-description
+            @include text-shortener
+            // Drop the subtitle onto its own line beneath the name + badges row
+            flex-basis: 100%
+            display: block
 
   td.project--hierarchy
     white-space: nowrap

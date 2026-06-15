@@ -71,6 +71,84 @@ RSpec.describe Overviews::PageHeaderComponent, type: :component do
       end
     end
 
+    describe "subtitle (header description)" do
+      context "when the project has a subtitle" do
+        let(:project) do
+          build_stubbed(:project, name: "Too big to fail", workspace_type:,
+                                  project_creation_wizard_enabled: true, subtitle: "Short tagline")
+        end
+
+        it "renders the subtitle in the description slot" do
+          expect(rendered_component).to have_css(
+            ".PageHeader-description .Truncate .Truncate-text",
+            text: "Short tagline"
+          )
+        end
+
+        it "exposes the full subtitle via the title attribute for the tooltip" do
+          expect(rendered_component).to have_css(
+            ".PageHeader-description .Truncate .Truncate-text[title='Short tagline']",
+            text: "Short tagline"
+          )
+        end
+      end
+
+      context "when the project has no subtitle (nil)" do
+        let(:project) do
+          build_stubbed(:project, name: "Too big to fail", workspace_type:,
+                                  project_creation_wizard_enabled: true, subtitle: nil)
+        end
+
+        it "renders no description/subtitle element or placeholder" do
+          expect(rendered_component).to have_no_css(".PageHeader-description")
+        end
+      end
+
+      context "when the project subtitle is blank" do
+        let(:project) do
+          project = build_stubbed(:project, name: "Too big to fail", workspace_type:,
+                                            project_creation_wizard_enabled: true)
+          # Bypass model normalization to assert the component itself guards on blank.
+          allow(project).to receive(:subtitle).and_return("")
+          project
+        end
+
+        it "renders no description/subtitle element or placeholder" do
+          expect(rendered_component).to have_no_css(".PageHeader-description")
+        end
+      end
+
+      context "when the subtitle contains HTML-like characters" do
+        let(:project) do
+          build_stubbed(:project, name: "Too big to fail", workspace_type:,
+                                  project_creation_wizard_enabled: true,
+                                  subtitle: '<b>bold</b> & "quoted"')
+        end
+
+        it "renders the markup as literal escaped text, not interpreted as HTML" do
+          expect(rendered_component).to have_css(
+            ".PageHeader-description .Truncate-text",
+            text: '<b>bold</b> & "quoted"'
+          )
+          expect(rendered_component).to have_no_css(".PageHeader-description .Truncate-text b")
+        end
+      end
+
+      context "when the project is archived" do
+        let(:project) do
+          build_stubbed(:project, name: "Too big to fail", workspace_type:, active: false,
+                                  project_creation_wizard_enabled: true, subtitle: "Archived tagline")
+        end
+
+        it "still renders the subtitle in the description slot" do
+          expect(rendered_component).to have_css(
+            ".PageHeader-description .Truncate-text",
+            text: "Archived tagline"
+          )
+        end
+      end
+    end
+
     context "with Portfolio" do
       let(:workspace_type) { :portfolio }
 

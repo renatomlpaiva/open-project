@@ -155,10 +155,22 @@ module Projects
         hierarchy_icon,
         name_link_section,
         archived_label,
-        workspace_type_badge
+        workspace_type_badge,
+        subtitle
       ].compact_blank
 
       content_tag(:div, safe_join(content), class: "projects-table--name")
+    end
+
+    def subtitle
+      return if project.subtitle.blank?
+
+      render(Primer::Beta::Text.new(
+               classes: "projects-table--name-subtitle",
+               font_size: :small,
+               color: :muted,
+               title: project.subtitle
+             )) { project.subtitle }
     end
 
     def hierarchy_icon
